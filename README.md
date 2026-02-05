@@ -100,43 +100,5 @@ python src/signal.py
 ```bash
 python src/ml_model.py
 ```
----
-## Outputs
-
-- `network_signals.csv` (generated): Window-level signals and basic features
-- `ml_results.csv` (generated): Final results including:
-  - `prediction` (1 = normal, -1 = anomaly)
-  - `votes` (0..4)
-  - `anomaly_score` (0..100)
-
-Plots (generated):
-- `assets/anomaly_detection_complete.png`
-- `assets/model_comparison.png`
-- `assets/feature_correlation.png`
-
-<details>
-  <summary>Column glossary (ml_results.csv)</summary>
-
-- `prediction`: Final ensemble decision per window
-- `votes`: How many detectors voted anomaly
-- `anomaly_score`: Combined score (higher means more suspicious)
-- `attack_type`: Expert-rule label (interpret as "X-like")
-
-</details>
----
-## Repository layout
-
-| Path | Purpose |
-|---|---|
-| `src/` | Core pipeline code |
-| `scripts/` | Optional helpers (e.g., synthetic dataset generator) |
-| `data/` | Small demo inputs (avoid sensitive captures in public repos) |
-| `assets/` | Screenshots used in the README |
 
 ---
-
-## Limitations
-
-- This project performs anomaly detection; it does not guarantee ground-truth attack identification
-- With only `Time/Source/Length`, some attack claims should be treated as "X-like behavior" unless richer fields (dst/proto/ports) exist
-
