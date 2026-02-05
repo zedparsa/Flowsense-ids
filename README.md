@@ -55,3 +55,15 @@ flowchart LR
 
 **Why signals + hybrid approach**:  
 > Network traffic becomes easier to analyze when aggregated into fixed windows, where changes in intensity, diversity, and timing show up as simple signal statistics. A hybrid setup reduces reliance on a single model and produces outputs that are easier to justify in a report (votes, scores, and rule-based labels).
+
+---
+
+## Signals used
+
+| Signal | What it captures | Why it helps |
+|---|---|---|
+| Packet count | Traffic intensity / bursts | Detect spikes and surges |
+| Traffic volume | Bytes per window | Separates many-small vs few-large packets |
+| Unique source IPs | Source diversity | Multi-source patterns |
+| Source IP entropy | Concentration vs spread | Identifies skewed vs diverse sources |
+| Time-interval variance | Timing irregularity | Bursty vs stable behavior |
