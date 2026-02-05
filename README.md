@@ -90,5 +90,28 @@ python src/signal.py
 
 ### 3) Run detection
 ```bash
-python src/ml_model.py
+python src/ML - model.py
 ```
+---
+## Outputs
+
+- `network_signals.csv` (generated): Window-level signals and basic features
+- `ml_results.csv` (generated): Final results including:
+  - `prediction` (1 = normal, -1 = anomaly)
+  - `votes` (0..4)
+  - `anomaly_score` (0..100)
+
+Plots (generated):
+- `assets/anomaly_detection_complete.png`
+- `assets/model_comparison.png`
+- `assets/feature_correlation.png`
+
+<details>
+  <summary>Column glossary (ml_results.csv)</summary>
+
+- `prediction`: Final ensemble decision per window
+- `votes`: How many detectors voted anomaly
+- `anomaly_score`: Combined score (higher means more suspicious)
+- `attack_type`: Expert-rule label (interpret as "X-like")
+
+</details>
