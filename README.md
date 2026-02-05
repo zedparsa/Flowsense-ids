@@ -50,3 +50,8 @@ flowchart LR
   F --> G
   G --> H[ml_results.csv + plots]
 ```
+**Flow**:  
+> Wireshark CSV → windowing (1 second) → signal features → feature engineering → unsupervised models + expert rules → majority voting → results (CSV + plots)
+
+**Why signals + hybrid approach**:  
+> Network traffic becomes easier to analyze when aggregated into fixed windows, where changes in intensity, diversity, and timing show up as simple signal statistics. A hybrid setup reduces reliance on a single model and produces outputs that are easier to justify in a report (votes, scores, and rule-based labels).
