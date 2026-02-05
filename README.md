@@ -38,7 +38,6 @@
 
 ### Pipeline
 
-Mermaid diagram source (optional; wrap it in a Mermaid block in your README if you want it rendered):
 ```mermaid
     flowchart LR
       A[Wireshark CSV] --> B[Windowing 1s]
