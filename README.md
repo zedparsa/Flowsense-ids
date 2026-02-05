@@ -102,7 +102,8 @@ python src/ml_model.py
 
 ---
 
-### Signal extraction (signal.py) — block by block
+## Signal extraction
+> (signal.py) — block by block
 
 #### 1) Config: load mapping 
 This part solves a practical issue: Wireshark CSV exports don’t always have the same column names (they vary by version, language, and export settings). Instead of hard-coding fragile column names inside the program, you load a JSON “translation layer” that maps whatever the CSV contains to your own stable schema.
