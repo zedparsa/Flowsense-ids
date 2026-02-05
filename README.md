@@ -115,3 +115,20 @@ Plots (generated):
 - `attack_type`: Expert-rule label (interpret as "X-like")
 
 </details>
+---
+## Repository layout
+
+| Path | Purpose |
+|---|---|
+| `src/` | Core pipeline code |
+| `scripts/` | Optional helpers (e.g., synthetic dataset generator) |
+| `data/` | Small demo inputs (avoid sensitive captures in public repos) |
+| `assets/` | Screenshots used in the README |
+
+---
+
+## Limitations
+
+- This project performs anomaly detection; it does not guarantee ground-truth attack identification
+- With only `Time/Source/Length`, some attack claims should be treated as "X-like behavior" unless richer fields (dst/proto/ports) exist
+
