@@ -22,38 +22,36 @@ Hybrid network traffic anomaly detection from time-window signals.
 </div>
 
 ---
+## Overview
 
-# Overview
+FlowSense-IDS is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is clarity, explainability, and presentation-ready outputs rather than production deployment.
 
-FlowSense-IDS is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is on clarity, explainability, and presentation-ready outputs rather than production deployment.
+### Highlights
 
-## Highlights
 | Item | Description |
 |---|---|
 | Goal | Flag unusual traffic windows using signals + hybrid detection |
-| Input | Wireshark-exported CSV mapped with `columns.json` |
-| Output | `ml_results.csv` + plots (timeline, model comparison, correlations) |
+| Input | Wireshark-exported CSV mapped with columns.json |
+| Output | ml_results.csv + plots (timeline, model comparison, correlations) |
 | Approach | Unsupervised models + expert rules + majority voting |
 
-## Pipeline
+### Pipeline
 
+Mermaid diagram source (optional; wrap it in a Mermaid block in your README if you want it rendered):
 ```mermaid
-flowchart LR
-  A[Wireshark CSV] --> B[Windowing 1s]
-  B --> C[Signal features]
-  C --> D[Feature engineering]
-  D --> E[Unsupervised models]
-  D --> F[Expert rules]
-  E --> G[Majority voting]
-  F --> G
-  G --> H[ml_results.csv + plots]
+    flowchart LR
+      A[Wireshark CSV] --> B[Windowing 1s]
+      B --> C[Signal features]
+      C --> D[Feature engineering]
+      D --> E[Unsupervised models]
+      D --> F[Expert rules]
+      E --> G[Majority voting]
+      F --> G
+      G --> H[ml_results.csv + plots]
 ```
-**Flow**:  
-> Wireshark CSV → windowing (1 second) → signal features → feature engineering → unsupervised models + expert rules → majority voting → results (CSV + plots)
+- Flow: Wireshark CSV → windowing (1 second) → signal features → feature engineering → unsupervised models + expert rules → majority voting → results (CSV + plots)
+- Why signals + hybrid approach: Aggregating traffic into fixed windows makes intensity, diversity, and timing changes visible as simple signal statistics; combining multiple detectors improves robustness and produces more defensible outputs (votes, scores, and rule-based labels)
 
-**Why signals + hybrid approach**:  
-> Network traffic becomes easier to analyze when aggregated into fixed windows, where changes in intensity, diversity, and timing show up as simple signal statistics. A hybrid setup reduces reliance on a single model and produces outputs that are easier to justify in a report (votes, scores, and rule-based labels).
-##
 ### Signals used
 
 | Signal | What it captures | Why it helps |
@@ -69,10 +67,11 @@ flowchart LR
 | Model | Type | Purpose |
 |---|---|---|
 | Isolation Forest | Unsupervised | Detects outliers based on isolation |
-| One-Class SVM | Unsupervised | Learns normal boundary, flags deviations |
+| One-Class SVM | Unsupervised | Learns a boundary of normal behavior and flags deviations |
 | KMeans | Clustering | Distance-based anomaly detection |
 | Expert rules | Rule-based | Threshold-based labeling for interpretability |
-| Ensemble voting | Fusion | Combines all models (majority vote) |
+| Ensemble voting | Fusion | Combines all detectors (majority vote) |
+
 ---
 
 ## Quick start
