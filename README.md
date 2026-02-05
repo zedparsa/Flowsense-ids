@@ -67,3 +67,23 @@ flowchart LR
 | Unique source IPs | Source diversity | Multi-source patterns |
 | Source IP entropy | Concentration vs spread | Identifies skewed vs diverse sources |
 | Time-interval variance | Timing irregularity | Bursty vs stable behavior |
+
+---
+
+## Quick start
+
+### 1) Install
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2) Build signals
+```bash
+python src/signal.py
+```
+
+### 3) Run detection
+```bash
+python src/ml_model.py
+```
