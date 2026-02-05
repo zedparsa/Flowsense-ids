@@ -4,27 +4,28 @@
 
 # FlowSense-IDS
 
-Hybrid network traffic anomaly detection from time-window signals.
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Press+Start+2P&size=14&pause=1000000&color=60A3BC&center=true&vCenter=true&width=1100&lines=Hybrid+network+traffic+anomaly+detection+from+time-window+signals.&repeat=false&cursor=false" />
+</p>
 
-<!-- Badges -->
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-informational)
-![Status](https://img.shields.io/badge/Status-Student%20Project-2ea44f)
+
 
 <!-- Quick Links -->
-<a href="#overview">Overview</a> •
-<a href="#quick-start">Quick start</a> •
-<a href="#signal-extraction">Signal extraction</a> •
-<a href="#machine-learning">Machine learning</a> •
-<a href="#outputs">Outputs</a> •
-<a href="#limitations">Limitations</a>
+<p align="center">
+  <a href="#overview"><img src="https://img.shields.io/badge/Overview-111827?style=for-the-badge" /></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Quick%20start-111827?style=for-the-badge" /></a>
+  <a href="#signal-extraction"><img src="https://img.shields.io/badge/Signal%20extraction-111827?style=for-the-badge" /></a>
+  <a href="#machine-learning"><img src="https://img.shields.io/badge/Machine%20learning-111827?style=for-the-badge" /></a>
+  <a href="#outputs"><img src="https://img.shields.io/badge/Outputs-111827?style=for-the-badge" /></a>
+  <a href="#limitations"><img src="https://img.shields.io/badge/Limitations-111827?style=for-the-badge" /></a>
+</p>
 
 </div>
 
 ---
 ## Overview
 
-FlowSense-IDS is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is clarity, explainability, and presentation-ready outputs rather than production deployment.
+**FlowSense-IDS** is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is clarity, explainability, and presentation-ready outputs rather than production deployment.
 
 ### Highlights
 
