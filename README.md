@@ -188,9 +188,9 @@ This block converts types, handles missing values, removes invalid rows, and ens
 ```
 
 Key implementation notes:
-> - `errors="coerce"` is ideal for messy CSV exports: bad values become NaN, then you drop only rows where time is invalid
-> - Lengths that fail conversion become 0, which prevents crashes and keeps aggregation consistent
-> - Filling `source` with `"UNKNOWN"` preserves row count and makes “missing source” explicit instead of silently dropping packets
+> - `errors="coerce"` is ideal for messy CSV exports: bad values become NaN, then you drop only rows where time is invalid.
+> - Lengths that fail conversion become 0, which prevents crashes and keeps aggregation consistent.
+> - Filling `source` with `"UNKNOWN"` preserves row count and makes “missing source” explicit instead of silently dropping packets.
 
 ---
 
@@ -210,9 +210,9 @@ This block turns continuous packet timestamps into a discrete per-second index a
 ```
 
 Key implementation notes:
-- np.floor(time) defines the 1-second window ID; it is simple, explainable, and consistent
-- global_index guarantees a continuous timeline; gaps become explicit zeros instead of missing rows, which is crucial for plotting and ML
-- Keeping source_ip and size as separate Series makes later groupby operations clearer
+> - `np.floor(time)` defines the 1-second window ID; it is simple, explainable, and consistent.
+> - `global_index` guarantees a continuous timeline; gaps become explicit zeros instead of missing rows, which is crucial for plotting and ML.
+> - Keeping `source_ip` and `size` as separate Series makes later groupby operations clearer.
 
 ---
 
@@ -226,8 +226,8 @@ This helper enforces one key invariant: every computed signal must align to the 
 ```
 
 Key implementation notes:
-- reindex(..., fill_value=0) is the main reason your signals are comparable and stackable in a single output table
-- This also makes downstream ML simpler because it never has to deal with missing time windows
+> - `reindex(..., fill_value=0)` is the main reason your signals are comparable and stackable in a single output table.
+> - This also makes downstream ML simpler because it never has to deal with missing time windows.
 
 ---
 
@@ -240,8 +240,8 @@ This signal measures traffic intensity per second.
 ```
 
 Key implementation notes:
-- value_counts on the window index is an efficient way to count packets per second
-- sort_index keeps windows in chronological order before reindexing
+> - `value_counts()` on the window index is an efficient way to count packets per second.
+> - `sort_index()` keeps windows in chronological order before reindexing.
 
 ---
 
@@ -254,8 +254,8 @@ This signal measures total bytes per second.
 ```
 
 Key implementation notes:
-- size.groupby(n).sum directly implements “bytes per window”
-- Together with packet_count, it enables derived features like average packet size later
+> - `size.groupby(n).sum()` directly implements “bytes per window”.
+> - Together with packet_count, it enables derived features like average packet size later.
 
 ---
 
@@ -277,9 +277,9 @@ This signal measures how concentrated or diverse the source distribution is with
 ```
 
 Key implementation notes:
-- Conceptually, you compute Shannon entropy H = -sum(p log2 p), which is easy to justify in a report
-- The empty-window guard returns 0.0 so the signal stays numeric and safe for ML
-- p = p[p > 0] is defensive; it avoids log issues if any zero probabilities appear
+> - Conceptually, you compute Shannon entropy `H = -sum(p log2 p)`, which is easy to justify in a report
+> - The empty-window guard returns 0.0 so the signal stays numeric and safe for ML
+> - `p = p[p > 0]` is defensive; it avoids log issues if any zero probabilities appear
 
 ---
 
@@ -292,8 +292,8 @@ This signal counts how many distinct sources appear per second.
 ```
 
 Key implementation notes:
-- nunique is the cleanest definition of “source diversity” at window level
-- This pairs well with entropy: unique counts “how many”, entropy captures “how evenly distributed”
+> - `nunique()` is the cleanest definition of “source diversity” at window level.
+> - This pairs well with entropy: unique counts “how many”, entropy captures “how evenly distributed”.
 
 ---
 
@@ -315,9 +315,9 @@ This signal measures timing irregularity inside each second by looking at inter-
 ```
 
 Key implementation notes:
-- Sorting timestamps then taking diff is the correct way to compute inter-arrival gaps
-- The < 2 guard is important because variance is undefined with fewer than 2 samples
-- Returning 0.0 on sparse windows keeps the feature stable and avoids NaNs
+> - Sorting timestamps then taking `diff()` is the correct way to compute inter-arrival gaps
+> - The `< 2` guard is important because variance is undefined with fewer than 2 samples
+> - Returning 0.0 on sparse windows keeps the feature stable and avoids NaNs
 
 ---
 
@@ -349,6 +349,6 @@ This block computes all signals, assembles a single aligned table, and exports i
 ```
 
 Key implementation notes:
-- Building one DataFrame with a shared time_window axis makes the output easy to plot, debug, and feed to ML
-- fillna(0) is a final safety net, although basic_signal already prevents missing windows in most cases
-- Printing the saved path and row count helps during demos and debugging
+> - Building one DataFrame with a shared `time_window` axis makes the output easy to plot, debug, and feed to ML.
+> - `.fillna(0)` is a final safety net, although basic_signal already prevents missing windows in most cases.
+> - Printing the saved path and row count helps during demos and debugging.
