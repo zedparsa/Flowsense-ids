@@ -130,7 +130,7 @@ Key implementation notes:
 > - The `try/except` ensures “fail fast”: if the mapping file is missing or malformed, the pipeline stops early instead of producing a wrong dataset silently.  
 > - `encoding="utf-8"` avoids issues if the JSON file ever contains non-ASCII characters
 
----
+##
 
 #### 2) Read CSV
 This block is the ingestion gate that converts the exported file into a structured table (a DataFrame). Everything downstream assumes the table exists and contains rows (packets) and columns (fields), so this stage validates that assumption first.
@@ -152,7 +152,7 @@ Key implementation notes:
 > - `pd.read_csv` is the single source of truth loader here; everything downstream depends on having a valid table.
 > - You handle the two most common failure cases explicitly: missing file and empty file.
 
----
+##
 
 #### 3) Rename columns to a standard schema
 This part creates a stable internal contract for your data. After renaming, the rest of your code can assume the same column names every time (`time`, `source`, `length`, etc.), no matter what the original CSV header labels were.
@@ -178,7 +178,7 @@ Key implementation notes:
 > - The “missing required columns” error is presentation-friendly because it prints both what is missing and what is available
 > - Using a set for `REQUIRED` is fine for validation, but `df = df[list(REQUIRED)]` can reorder columns unpredictably; for stable ordering, use a list like `["no","time","source","length"]`.
 
----
+##
 
 #### 4) Cleaning
 Cleaning turns “CSV text” into reliable numeric and categorical values that you can safely aggregate. Real CSV exports often contain missing values, non-numeric strings, or inconsistent formatting, and those issues can break computations or distort results.
@@ -202,7 +202,7 @@ Key implementation notes:
 > - Lengths that fail conversion become 0, which prevents crashes and keeps aggregation consistent.
 > - Filling `source` with `"UNKNOWN"` preserves row count and makes “missing source” explicit instead of silently dropping packets.
 
----
+##
 
 #### 5) Build shared time windows
 This is the key transformation that turns packet logs into a time-series dataset. Packets arrive at irregular continuous timestamps, but signal extraction needs discrete, comparable bins so every second (or window) becomes one observation.
@@ -226,7 +226,7 @@ Key implementation notes:
 > - `global_index` guarantees a continuous timeline; gaps become explicit zeros instead of missing rows, which is crucial for plotting and ML.
 > - Keeping `source_ip` and `size` as separate Series makes later groupby operations clearer.
 
----
+##
 
 #### 6) Core helper: basic_signal
 This helper enforces a strong invariant: every signal must align to the same global time axis and provide a value for every time window. Without that, features can end up with different lengths or missing windows, making merges error-prone and creating subtle bugs.
@@ -243,7 +243,7 @@ Key implementation notes:
 > - `reindex(..., fill_value=0)` is the main reason your signals are comparable and stackable in a single output table.
 > - This also makes downstream ML simpler because it never has to deal with missing time windows.
 
----
+##
 
 #### 7) Signal: packet_count
 This feature measures traffic intensity: how many packets arrive in each second. It is simple, intuitive, and extremely useful for detecting sudden spikes, bursts, or drops in activity.
@@ -259,7 +259,7 @@ Key implementation notes:
 > - `value_counts()` on the window index is an efficient way to count packets per second.
 > - `sort_index()` keeps windows in chronological order before reindexing.
 
----
+##
 
 #### 8) Signal: traffic_volume
 This feature measures total bytes per second. It answers a different question than packet_count: not “how many packets,” but “how much data moved.”
@@ -275,7 +275,7 @@ Key implementation notes:
 > - `size.groupby(n).sum()` directly implements “bytes per window”.
 > - Together with packet_count, it enables derived features like average packet size later.
 
----
+##
 
 #### 9) Signal: source_entropy
 This feature quantifies how concentrated or diverse the source distribution is within each time window using Shannon entropy, \(H = -\sum p_i \log_2(p_i)\). It goes beyond simply counting unique sources by considering whether traffic is dominated by one source or spread evenly among many.
@@ -301,7 +301,7 @@ Key implementation notes:
 > - The empty-window guard returns 0.0 so the signal stays numeric and safe for ML
 > - `p = p[p > 0]` is defensive; it avoids log issues if any zero probabilities appear
 
----
+##
 
 #### 10) Signal: unique_source_ip
 This feature counts how many distinct sources appear per second. It is an easy-to-explain diversity indicator and provides an immediate sense of how many different senders were active.
@@ -317,7 +317,7 @@ Key implementation notes:
 > - `nunique()` is the cleanest definition of “source diversity” at window level.
 > - This pairs well with entropy: unique counts “how many”, entropy captures “how evenly distributed”.
 
----
+##
 
 #### 11) Signal: time_interval_variance
 This feature measures timing irregularity inside each second by computing the variance of inter-arrival times. It looks at how packets are spaced within the window, not just how many there are.
@@ -343,7 +343,7 @@ Key implementation notes:
 > - The `< 2` guard is important because variance is undefined with fewer than 2 samples
 > - Returning 0.0 on sparse windows keeps the feature stable and avoids NaNs
 
----
+##
 
 #### 12) Compute & save
 This block assembles all computed signals into a single aligned feature table and exports it for downstream use. The key concept is alignment: every row corresponds to one time window, and every column is a signal value for that same window.
@@ -378,3 +378,5 @@ Key implementation notes:
 > - Building one DataFrame with a shared `time_window` axis makes the output easy to plot, debug, and feed to ML.
 > - `.fillna(0)` is a final safety net, although basic_signal already prevents missing windows in most cases.
 > - Printing the saved path and row count helps during demos and debugging.
+
+---
