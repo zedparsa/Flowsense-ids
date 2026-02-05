@@ -40,7 +40,7 @@
 
 ```mermaid
     flowchart LR
-      A[Wireshark CSV] --> B[Windowing 1s]
+      A[CSV] --> B[Windowing]
       B --> C[Signal features]
       C --> D[Feature engineering]
       D --> E[Unsupervised models]
