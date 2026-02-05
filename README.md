@@ -90,7 +90,7 @@ python src/signal.py
 
 ### 3) Run detection
 ```bash
-python src/ML - model.py
+python src/ml_model.py
 ```
 ---
 ## Outputs
