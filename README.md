@@ -104,8 +104,9 @@ python src/ml_model.py
 
 ### Signal extraction (signal.py) — block by block
 
-#### 1) Config: load mapping
-This block defines the input/output filenames and loads a column-name mapping so the script can work with different Wireshark CSV export formats while keeping a stable internal schema.
+#### 1) Config: load mapping 
+This part solves a practical issue: Wireshark CSV exports don’t always have the same column names (they vary by version, language, and export settings). Instead of hard-coding fragile column names inside the program, you load a JSON “translation layer” that maps whatever the CSV contains to your own stable schema.
+
 
 ```python
     MAPPING_FILE = "columns.json"
@@ -122,6 +123,7 @@ This block defines the input/output filenames and loads a column-name mapping so
         print(f"Error: '{MAPPING_FILE}' is not valid JSON: {e}")
         raise
 ```
+Conceptually, this separates “format compatibility” from “signal logic.” If the CSV headers change later, you update only `columns.json`, not the feature-engineering code. The explicit error handling is a correctness guarantee: if the mapping file is missing or invalid, the pipeline stops early rather than producing a clean-looking but wrong dataset.  
 
 Key implementation notes:
 > - The `try/except` ensures “fail fast”: if the mapping file is missing or malformed, the pipeline stops early instead of producing a wrong dataset silently.  
@@ -130,7 +132,8 @@ Key implementation notes:
 ---
 
 #### 2) Read CSV
-This block loads the Wireshark-exported CSV into a DataFrame and validates that a usable dataset exists.
+This block is the ingestion gate that converts the exported file into a structured table (a DataFrame). Everything downstream assumes the table exists and contains rows (packets) and columns (fields), so this stage validates that assumption first.
+
 
 ```python
     try:
@@ -142,6 +145,7 @@ This block loads the Wireshark-exported CSV into a DataFrame and validates that 
         print("Error: CSV file is empty!")
         raise
 ```
+Conceptually, it’s about making failure explicit and early. If the file is missing or empty, stopping is the correct behavior because any computed signals would be meaningless yet still look “valid” (for example, a file full of zeros). Keeping this stage simple also makes the pipeline easier to explain: “load data once, then process it.”
 
 Key implementation notes:
 > - `pd.read_csv` is the single source of truth loader here; everything downstream depends on having a valid table.
@@ -150,7 +154,8 @@ Key implementation notes:
 ---
 
 #### 3) Rename columns to a standard schema
-This block applies the mapping, checks that the required columns exist, and keeps only what the signal stage needs.
+This part creates a stable internal contract for your data. After renaming, the rest of your code can assume the same column names every time (`time`, `source`, `length`, etc.), no matter what the original CSV header labels were.
+
 
 ```python
     df = df.rename(columns=column_map)
@@ -166,6 +171,7 @@ This block applies the mapping, checks that the required columns exist, and keep
 
     df = df[list(REQUIRED)]
 ```
+Conceptually, you are building a clean boundary between the messy outside world (CSV exports) and the clean inside world (your analysis pipeline). The required-column check is critical: it prevents confusing downstream errors by validating the schema upfront and giving a clear, actionable message if something is wrong.
 
 Key implementation notes:
 > - The “missing required columns” error is presentation-friendly because it prints both what is missing and what is available
@@ -174,7 +180,8 @@ Key implementation notes:
 ---
 
 #### 4) Cleaning
-This block converts types, handles missing values, removes invalid rows, and ensures you don’t continue with an empty dataset.
+Cleaning turns “CSV text” into reliable numeric and categorical values that you can safely aggregate. Real CSV exports often contain missing values, non-numeric strings, or inconsistent formatting, and those issues can break computations or distort results.
+
 
 ```python
     df["time"] = pd.to_numeric(df["time"], errors="coerce")
@@ -186,6 +193,8 @@ This block converts types, handles missing values, removes invalid rows, and ens
     if len(df) == 0:
         raise ValueError("No valid rows after cleaning (time is all invalid).")
 ```
+Conceptually, you are making the dataset machine-usable. Time must be numeric because it defines your entire timeline; length must be numeric because you sum bytes; source should not be null because grouping and diversity metrics depend on consistent categories. Dropping rows with invalid time is principled: if a packet cannot be placed on the timeline, it cannot contribute to time-window signals.
+
 
 Key implementation notes:
 > - `errors="coerce"` is ideal for messy CSV exports: bad values become NaN, then you drop only rows where time is invalid.
@@ -195,7 +204,7 @@ Key implementation notes:
 ---
 
 #### 5) Build shared time windows
-This block turns continuous packet timestamps into a discrete per-second index and builds a complete window range (including seconds with zero packets).
+This is the key transformation that turns packet logs into a time-series dataset. Packets arrive at irregular continuous timestamps, but signal extraction needs discrete, comparable bins so every second (or window) becomes one observation.
 
 ```python
     times = df["time"]
@@ -209,6 +218,8 @@ This block turns continuous packet timestamps into a discrete per-second index a
     size = df["length"]
 ```
 
+Conceptually, you are defining the sampling grid for your signals. By flooring time to integer seconds, every packet is assigned to a 1-second window, turning “events in time” into “counts and statistics per window.” Building a continuous global index from the first to last window matters because gaps become meaningful zeros (no traffic) rather than missing timestamps that can confuse plots and models.
+
 Key implementation notes:
 > - `np.floor(time)` defines the 1-second window ID; it is simple, explainable, and consistent.
 > - `global_index` guarantees a continuous timeline; gaps become explicit zeros instead of missing rows, which is crucial for plotting and ML.
@@ -217,13 +228,15 @@ Key implementation notes:
 ---
 
 #### 6) Core helper: basic_signal
-This helper enforces one key invariant: every computed signal must align to the same global time axis.
+This helper enforces a strong invariant: every signal must align to the same global time axis and provide a value for every time window. Without that, features can end up with different lengths or missing windows, making merges error-prone and creating subtle bugs.
 
 ```python
     def basic_signal(compute_function):
         signal = compute_function(n)
         return signal.reindex(global_index, fill_value=0)
 ```
+
+Conceptually, this is output standardization. Each signal function focuses only on its definition (count, sum, entropy, timing variability), and the helper handles alignment and missing-window behavior. Filling missing windows with zero is also a semantic choice: “no packets happened” becomes a real value, not “unknown.”
 
 Key implementation notes:
 > - `reindex(..., fill_value=0)` is the main reason your signals are comparable and stackable in a single output table.
@@ -232,12 +245,14 @@ Key implementation notes:
 ---
 
 #### 7) Signal: packet_count
-This signal measures traffic intensity per second.
+This feature measures traffic intensity: how many packets arrive in each second. It is simple, intuitive, and extremely useful for detecting sudden spikes, bursts, or drops in activity.
+
 
 ```python
     def packet_count():
         return basic_signal(lambda n: n.value_counts().sort_index())
 ```
+Conceptually, packet_count is “event frequency” in time-series terms. Many network anomalies show up as changes in frequency, such as abrupt surges (flood-like behavior) or sudden silence (outage). It also provides context for other signals, like distinguishing “many small packets” from “few large packets” when combined with volume.
 
 Key implementation notes:
 > - `value_counts()` on the window index is an efficient way to count packets per second.
@@ -246,12 +261,14 @@ Key implementation notes:
 ---
 
 #### 8) Signal: traffic_volume
-This signal measures total bytes per second.
+This feature measures total bytes per second. It answers a different question than packet_count: not “how many packets,” but “how much data moved.”
 
 ```python
     def traffic_volume():
         return basic_signal(lambda n: size.groupby(n).sum())
 ```
+
+Conceptually, traffic_volume is a coarse throughput measure. Two windows can have the same packet_count but very different byte totals, which often indicates very different behavior (control chatter versus bulk transfer). When you present it, it pairs naturally with packet_count to explain traffic shape and load.
 
 Key implementation notes:
 > - `size.groupby(n).sum()` directly implements “bytes per window”.
@@ -260,7 +277,8 @@ Key implementation notes:
 ---
 
 #### 9) Signal: source_entropy
-This signal measures how concentrated or diverse the source distribution is within each second.
+This feature quantifies how concentrated or diverse the source distribution is within each time window using Shannon entropy, \(H = -\sum p_i \log_2(p_i)\). It goes beyond simply counting unique sources by considering whether traffic is dominated by one source or spread evenly among many.
+
 
 ```python
     def source_entropy():
@@ -275,6 +293,7 @@ This signal measures how concentrated or diverse the source distribution is with
 
         return basic_signal(lambda n: source_ip.groupby(n).apply(calculate_entropy))
 ```
+Conceptually, entropy answers: “Is the traffic coming mainly from one sender, or from many senders with similar contribution?” Low entropy means concentration; high entropy means diversity and balance. This is powerful in analysis because it captures distribution shape, not just the number of categories.
 
 Key implementation notes:
 > - Conceptually, you compute Shannon entropy `H = -sum(p log2 p)`, which is easy to justify in a report
@@ -284,12 +303,14 @@ Key implementation notes:
 ---
 
 #### 10) Signal: unique_source_ip
-This signal counts how many distinct sources appear per second.
+This feature counts how many distinct sources appear per second. It is an easy-to-explain diversity indicator and provides an immediate sense of how many different senders were active.
+
 
 ```python
     def unique_source_ip():
         return basic_signal(lambda n: source_ip.groupby(n).nunique())
 ```
+Conceptually, it answers: “How many unique talkers were present in this window?” It complements entropy: unique_source_ip measures diversity by presence, while entropy measures diversity by balance. Two windows can have the same number of unique sources but different entropy if one source dominates packet share.
 
 Key implementation notes:
 > - `nunique()` is the cleanest definition of “source diversity” at window level.
@@ -298,7 +319,8 @@ Key implementation notes:
 ---
 
 #### 11) Signal: time_interval_variance
-This signal measures timing irregularity inside each second by looking at inter-arrival time variance.
+This feature measures timing irregularity inside each second by computing the variance of inter-arrival times. It looks at how packets are spaced within the window, not just how many there are.
+
 
 ```python
     def time_interval_variance():
@@ -313,6 +335,7 @@ This signal measures timing irregularity inside each second by looking at inter-
 
         return basic_signal(lambda n: times.groupby(n).apply(calculate_variance))
 ```
+Conceptually, it distinguishes regular patterns from bursty patterns even when packet_count is the same. For example, 20 packets evenly spaced and 20 packets arriving in clumps are different behaviors; this feature helps separate them. Returning \(0\) when there are fewer than two packets is principled because inter-arrival variability cannot be defined without at least two timestamps.
 
 Key implementation notes:
 > - Sorting timestamps then taking `diff()` is the correct way to compute inter-arrival gaps
@@ -322,7 +345,8 @@ Key implementation notes:
 ---
 
 #### 12) Compute & save
-This block computes all signals, assembles a single aligned table, and exports it as the ML-ready dataset.
+This block assembles all computed signals into a single aligned feature table and exports it for downstream use. The key concept is alignment: every row corresponds to one time window, and every column is a signal value for that same window.
+
 
 ```python
     print("Calculating signals...")
@@ -347,6 +371,7 @@ This block computes all signals, assembles a single aligned table, and exports i
     print("Done.")
     print(f"Saved: {OUT_FILE} | rows={len(all_signals)}")
 ```
+Conceptually, this is the point where you move from raw events (packets) to an ML-ready dataset (a time-series feature matrix). Exporting to CSV finalizes a clean pipeline boundary: capture and mapping produce inputs, signal extraction produces features, and later stages (visualization or ML) consume the output reliably.
 
 Key implementation notes:
 > - Building one DataFrame with a shared `time_window` axis makes the output easy to plot, debug, and feed to ML.
