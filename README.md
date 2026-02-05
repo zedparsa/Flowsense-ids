@@ -50,8 +50,11 @@ Mermaid diagram source (optional; wrap it in a Mermaid block in your README if y
       F --> G
       G --> H[ml_results.csv + plots]
 ```
-- Flow: Wireshark CSV → windowing (1 second) → signal features → feature engineering → unsupervised models + expert rules → majority voting → results (CSV + plots)
-- Why signals + hybrid approach: Aggregating traffic into fixed windows makes intensity, diversity, and timing changes visible as simple signal statistics; combining multiple detectors improves robustness and produces more defensible outputs (votes, scores, and rule-based labels)
+**Flow**:  
+> Wireshark CSV → windowing (1 second) → signal features → feature engineering → unsupervised models + expert rules → majority voting → results (CSV + plots)
+
+**Why signals + hybrid approach**:  
+> Aggregating traffic into fixed windows makes intensity, diversity, and timing changes visible as simple signal statistics; combining multiple detectors improves robustness and produces more defensible outputs (votes, scores, and rule-based labels)
 
 ### Signals used
 
