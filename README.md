@@ -74,6 +74,11 @@ flowchart LR
 
 ### 1) Install
 
+**Ubuntu/Linux**:
+```bash
+pip3 install -r requirements.txt
+```
+**Windows/macOS**:
 ```bash
 pip install -r requirements.txt
 ```
