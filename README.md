@@ -1011,6 +1011,7 @@ This is helpful in demos because it confirms that the pipeline completed success
     print(f"✓ 3 visualizations generated (dark theme)\n")
 ```
 ## outputs
+### Normal traffic outputs
 
 ![Anomaly detection timeline (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/anomaly_detection_complete%201.png?raw=1)  
 
@@ -1021,7 +1022,7 @@ This is helpful in demos because it confirms that the pipeline completed success
 
 **Why a few anomalies can still appear:** Models like `IsolationForest` (with `contamination=0.1`) are designed to label a small fraction of points as outliers by design, so a small number of “soft anomalies” is expected even in benign data. The key is that these points are low-agreement (fewer votes) and do not form a consistent abnormal pattern.
 
----
+##
 
 ![Feature correlation (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/feature_correlation%201.png?raw=1)  
 
@@ -1032,7 +1033,7 @@ This is helpful in demos because it confirms that the pipeline completed success
 
 **Why it matters for your pipeline:** If `anomaly_score` strongly correlates with only one basic feature, your detector might effectively be “just a threshold” on that feature. In healthy normal results, `anomaly_score` is usually influenced by multiple signals (intensity, volume, diversity, timing), which supports your “hybrid” claim.
 
----
+##
 
 ![Model comparison (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/model_comparison%201.png?raw=1)  
 
@@ -1043,7 +1044,7 @@ This is helpful in demos because it confirms that the pipeline completed success
 
 **Why the ensemble result matters:** The ensemble count being low supports the idea that “multiple independent methods agree that most windows are normal,” which is stronger than relying on a single algorithm.
 
----
+##
 
 ### Attack / anomalous traffic outputs
 
@@ -1056,7 +1057,7 @@ This is helpful in demos because it confirms that the pipeline completed success
 
 **Why this supports detection:** The timeline makes it visually obvious that the model is reacting to a pattern, not random noise. The presence of a coherent abnormal segment after (or across) the `train/test` split suggests the system can generalize beyond the training baseline.
 
----
+##
 
 ![Feature correlation (attack)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/feature_correlation%202.png?raw=1)  
 
@@ -1067,7 +1068,7 @@ This is helpful in demos because it confirms that the pipeline completed success
 
 **Why it matters for explanation:** This helps you justify that the detector is not using a single cue. Instead, it responds to the multivariate footprint of the attack, which is exactly why your pipeline builds multiple engineered features (ratios, rolling stats, change rates).
 
----
+##
 
 ![Model comparison (attack)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/model_comparison%202.png?raw=1)  
 
