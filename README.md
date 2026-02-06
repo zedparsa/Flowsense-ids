@@ -23,7 +23,7 @@
 </div>
 
 ---
-## Overview
+## 🔷 Overview
 
 **FlowSense-IDS** is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is clarity, explainability, and presentation-ready outputs rather than production deployment.
 
@@ -77,7 +77,7 @@
 
 ---
 
-## Quick start
+## 🔷 Quick start
 
 ### 1) Install
 
@@ -102,7 +102,7 @@ python src/ml_model.py
 
 ---
 
-## Signal extraction
+## 🔷 Signal extraction
 > (signal.py) — block by block
 
 #### 1) Config: load mapping 
@@ -381,7 +381,7 @@ Key implementation notes:
 
 ---
 
-## Machine learning 
+## 🔷 Machine learning 
 > (ml_model.py) — block by block
 
 #### 1) Imports
@@ -1010,7 +1010,7 @@ This is helpful in demos because it confirms that the pipeline completed success
     print(f"✓ {len(anomalies_all)} anomalies detected")
     print(f"✓ 3 visualizations generated (dark theme)\n")
 ```
-## outputs
+## 🔷 outputs
 ### Normal traffic outputs
 
 ![Anomaly detection timeline (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/anomaly_detection_complete%201.png?raw=1)  
