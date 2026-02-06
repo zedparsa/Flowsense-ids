@@ -12,10 +12,10 @@
 
 <!-- Quick Links -->
 <p align="center">
-  <a href="#overview"><img src="https://img.shields.io/badge/🔷 Overview-111827?style=for-the-badge" /></a>
+  <a href="#overview"><img src="https://img.shields.io/badge/Overview-111827?style=for-the-badge" /></a>
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick%20start-111827?style=for-the-badge" /></a>
   <a href="#signal-extraction"><img src="https://img.shields.io/badge/Signal%20extraction-111827?style=for-the-badge" /></a>
-  <a href="#machine-learning"><img src="https://img.shields.io/badge/ 🔷 Machine%20learning-111827?style=for-the-badge" /></a>
+  <a href="#machine-learning"><img src="https://img.shields.io/badge/Machine%20learning-111827?style=for-the-badge" /></a>
   <a href="#outputs"><img src="https://img.shields.io/badge/Outputs-111827?style=for-the-badge" /></a>
   <a href="#limitations"><img src="https://img.shields.io/badge/Limitations-111827?style=for-the-badge" /></a>
 </p>
@@ -23,6 +23,7 @@
 </div>
 
 ---
+<a id="overview"></a>
 ## 🔷 Overview
 
 **FlowSense-IDS** is a small, course-friendly pipeline that converts packet logs into discrete-time signals (fixed windows) and flags suspicious windows using multiple unsupervised methods plus simple expert rules. The focus is clarity, explainability, and presentation-ready outputs rather than production deployment.
@@ -76,7 +77,7 @@
 | Ensemble voting | Fusion | Combines all detectors (majority vote) |
 
 ---
-
+<a id="quick-start"></a>
 ## 🔷 Quick start
 
 ### 1) Install
@@ -101,7 +102,7 @@ python src/ml_model.py
 ```
 
 ---
-
+<a id="signal-extraction"></a>
 ## 🔷 Signal extraction
 > (signal.py) — block by block
 
@@ -380,7 +381,7 @@ Key implementation notes:
 > - Printing the saved path and row count helps during demos and debugging.
 
 ---
-
+<a id="machine-learning"></a>
 ## 🔷 Machine learning 
 > (ml_model.py) — block by block
 
@@ -1010,6 +1011,7 @@ This is helpful in demos because it confirms that the pipeline completed success
     print(f"✓ {len(anomalies_all)} anomalies detected")
     print(f"✓ 3 visualizations generated (dark theme)\n")
 ```
+<a id="outputs"></a>
 ## 🔷 outputs
 ### Normal traffic outputs
 
