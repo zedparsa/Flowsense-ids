@@ -12,10 +12,10 @@
 
 <!-- Quick Links -->
 <p align="center">
-  <a href="#overview"><img src="https://img.shields.io/badge/🔷Overview-111827?style=for-the-badge" /></a>
+  <a href="#overview"><img src="https://img.shields.io/badge/🔷 Overview-111827?style=for-the-badge" /></a>
   <a href="#quick-start"><img src="https://img.shields.io/badge/Quick%20start-111827?style=for-the-badge" /></a>
   <a href="#signal-extraction"><img src="https://img.shields.io/badge/Signal%20extraction-111827?style=for-the-badge" /></a>
-  <a href="#machine-learning"><img src="https://img.shields.io/badge/Machine%20learning-111827?style=for-the-badge" /></a>
+  <a href="#machine-learning"><img src="https://img.shields.io/badge/ 🔷 Machine%20learning-111827?style=for-the-badge" /></a>
   <a href="#outputs"><img src="https://img.shields.io/badge/Outputs-111827?style=for-the-badge" /></a>
   <a href="#limitations"><img src="https://img.shields.io/badge/Limitations-111827?style=for-the-badge" /></a>
 </p>
