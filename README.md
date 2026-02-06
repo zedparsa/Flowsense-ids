@@ -1080,3 +1080,34 @@ This is helpful in demos because it confirms that the pipeline completed success
 **How to read it:** If most models detect more anomalies than in the normal scenario, that’s a strong sign the injected behavior is “structurally different.” If only one model spikes while others remain low, it suggests the attack signature aligns with one method’s sensitivity but is not broadly supported, which is useful for tuning.
 
 **Why the ensemble is the final evidence:** An ensemble increase indicates “multiple independent perspectives” (outlier-based, boundary-based, clustering distance, and rule-based reasoning) converge on the same suspicious windows. That is usually your most defensible argument in a presentation.
+
+---
+<a id="limitations"></a>
+## ⚠️ Limitations
+
+This project is designed to be explainable and reproducible, but it has important constraints that should be clearly documented in the README.
+
+### Data and visibility limits
+- The feature set is built from a small schema (`time`, `source`, `length`), so the system cannot use destination IPs, ports, protocols, flags, or flow-level context
+- Because of that, `attack_type` is an interpretation based on limited signals, not a guaranteed ground-truth classification
+- Encrypted traffic is fine for metadata-based detection, but payload-based evidence is intentionally out of scope
+
+### Windowing assumptions
+- Signals are aggregated into \(1\) second windows using `floor(time)`, so very short bursts inside a second can be smoothed out, and very low-traffic captures can become sparse
+- Any change to window size changes what “normal” looks like, so thresholds and model behavior will shift accordingly
+
+### Unsupervised evaluation constraints
+- The pipeline is mainly unsupervised (`IsolationForest`, `OneClassSVM`, distance-to-`KMeans`), meaning it detects outliers relative to a baseline, not “attacks” in an absolute sense
+- Without labeled ground truth, evaluation focuses on sanity checks (detection rate stability, model agreement, and case studies), not formal metrics like precision/recall
+
+### Threshold sensitivity and calibration
+- `contamination` and `nu` directly affect how many anomalies are flagged, so results are sensitive to these settings
+- The expert rules learn quantile thresholds from the training split; if the training segment already contains attacks or major shifts, learned thresholds can be biased
+
+### Generalization and dataset dependence
+- Models are trained on one capture’s distribution; traffic patterns differ heavily across networks, times, and workloads, so you should recalibrate per environment
+- KMeans uses a fixed `n_clusters=3`, which may not match the true number of “normal regimes” in every dataset
+
+### Implementation scope
+- This is a research-style pipeline focused on clarity and visualization, not a production IDS: it does not include online streaming, concept-drift handling, alert deduplication, or automated response
+- The output is best used as a decision-support signal, then validated with deeper packet/flow inspection tools
