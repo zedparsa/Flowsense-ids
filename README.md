@@ -381,7 +381,7 @@ Key implementation notes:
 
 ---
 
-## Machine learning pipeline
+## Machine learning 
 > (ml_model.py) — block by block
 
 #### 1) Imports
@@ -401,8 +401,8 @@ The important idea is separation of concerns: ML models should not care about CS
 ```
 
 Key implementation notes:
-> - IsolationForest and OneClassSVM are classic unsupervised anomaly detectors, meaning they do not require ground-truth attack labels
-> - StandardScaler is essential because these models are sensitive to feature scale (bytes, counts, entropy are on very different ranges)
+> - `IsolationForest` and `OneClassSVM` are classic `unsupervised anomaly detectors`, meaning they do not require ground-truth attack labels
+> - `StandardScaler` is essential because these models are sensitive to feature scale (bytes, counts, entropy are on very different ranges)
 
 ##
 
@@ -421,8 +421,8 @@ TRAIN_RATIO defines a time-based split, which is crucial for time-series realism
 ```
 
 Key implementation notes:
-> - Time-based splitting avoids leaking future patterns into the past, which would inflate performance artificially
-> - VOTE_THRESHOLD = 2 means “majority voting” in a 4-model ensemble (at least 2 agree)
+> - Time-based splitting avoids leaking future patterns into the past, which would inflate performance artificially.
+> - `VOTE_THRESHOLD = 2` means “majority voting” in a 4-model ensemble (at least 2 agree).
 
 ##
 
@@ -449,8 +449,8 @@ The printed header is not cosmetic; it is operational. In real demos and debuggi
 ```
 
 Key implementation notes:
-> - Failing fast here prevents producing plots and CSV outputs that look valid but are built from no data
-> - Reading from network_signals.csv keeps the ML stage independent from raw packet parsing
+> - Failing fast here prevents producing plots and CSV outputs that look valid but are built from no data.
+> - Reading from `network_signals.csv` keeps the ML stage independent from raw packet parsing.
 
 ##
 
@@ -458,9 +458,9 @@ Key implementation notes:
 This block upgrades basic signals into a richer feature set that captures ratios, trends, variability, and sudden changes. Conceptually, anomalies are rarely defined by a single number; they are patterns over time. Feature engineering converts raw measurements into “behavior descriptors” that models can learn more reliably.
 
 You create three main feature families:
-- Ratio features to normalize effects (like volume versus count)
-- Rolling features to capture local baseline and volatility over time
-- Rate-of-change features to detect abrupt transitions
+- Ratio features to normalize effects (like volume versus count).
+- Rolling features to capture local baseline and volatility over time.
+- Rate-of-change features to detect abrupt transitions.
 
 ```python
     print("\nFeature engineering...")
@@ -490,9 +490,9 @@ You create three main feature families:
 ```
 
 Key implementation notes:
-> - Adding +1 in denominators prevents division-by-zero and keeps features defined even in zero-packet windows
-> - Rolling mean and rolling std act like a dynamic baseline: “what is normal around here” changes over time
-> - packet_change highlights sudden bursts that might be missed when only looking at absolute count
+> - Adding +1 in denominators prevents division-by-zero and keeps features defined even in zero-packet windows.
+> - `Rolling` mean and rolling std act like a dynamic baseline: “what is normal around here” changes over time.
+> - `packet_change` highlights sudden bursts that might be missed when only looking at absolute count.
 
 ##
 
@@ -564,8 +564,8 @@ These models output labels of 1 (normal) and -1 (anomaly). Printing anomaly coun
 ```
 
 Key implementation notes:
-> - contamination and nu both act like “expected anomaly proportion” controls, so they directly influence how aggressive the detector is
-> - decision_function from IsolationForest provides a continuous score you later convert into a normalized anomaly_score
+> - `contamination` and `nu` both act like “expected anomaly proportion” controls, so they directly influence how aggressive the detector is.
+> - `decision_function` from `IsolationForest` provides a continuous score you later convert into a normalized `anomaly_score`.
 
 ##
 
@@ -599,8 +599,8 @@ Then you treat “far from all learned clusters” as suspicious. This is a stro
 ```
 
 Key implementation notes:
-> - Using the minimum distance to cluster centers implements “closest normal regime”
-> - Learning the threshold from training data adapts to each capture and avoids hard-coded distance cutoffs
+> - Using the minimum distance to cluster centers implements “closest normal regime”.
+> - Learning the threshold from training data adapts to each capture and avoids hard-coded distance cutoffs.
 
 ##
 
@@ -680,16 +680,16 @@ Crucially, your rules are not fixed constants; you learn thresholds from the tra
 
 Key implementation notes:
 > - Quantile thresholds adapt to baseline traffic, so the rule system generalizes better across different captures
-> - expert_score provides both detection and interpretability, while attack_type gives a human-readable explanation
+> - `expert_score` provides both detection and interpretability, while `attack_type` gives a human-readable explanation
 
 ##
 
 #### 9) Layer 4: Ensemble (Majority Voting)
 This block fuses multiple weak-to-strong opinions into a more stable final decision. Conceptually, each detector has a different failure mode:
-- IsolationForest may over-flag rare but harmless patterns
-- OneClassSVM may be sensitive to scaling and boundary shape
-- KMeans distance may flag transitions between normal regimes
-- Expert rules may miss novel anomalies
+- `IsolationForest` may over-flag rare but harmless patterns.
+- `OneClassSVM` may be sensitive to scaling and boundary shape.
+- `KMeans` distance may flag transitions between normal regimes.
+- Expert rules may miss novel anomalies.
 
 Majority voting reduces the chance that one model’s bias dominates the final result. Requiring at least VOTE_THRESHOLD votes is a transparent policy you can explain in one sentence during a presentation.
 
@@ -733,9 +733,9 @@ Majority voting reduces the chance that one model’s bias dominates the final r
 ```
 
 Key implementation notes:
-> - votes is a confidence proxy: higher agreement usually means higher trust
-> - The anomaly_score is a weighted fusion of three perspectives: outlierness (IF), explainable suspicion (expert), and novelty distance (KMeans)
-> - 1e-9 prevents division-by-zero when normalizing constant scores
+> - votes is a confidence proxy: higher agreement usually means higher trust.
+> - The `anomaly_score` is a weighted fusion of three perspectives: outlierness (IF), explainable suspicion (expert), and novelty distance (KMeans).
+> - 1e-9 prevents division-by-zero when normalizing constant scores.
 
 ##
 
@@ -799,7 +799,7 @@ The case-study print is extremely useful in a presentation: it turns the pipelin
 
 Key implementation notes:
 > - Without labels, these diagnostics help you tune sensitivity and check for obvious miscalibration
-> - Agreement metrics (all 4, 2+ votes) serve as an interpretable confidence report
+> - Agreement metrics `(all 4, 2+ votes)` serve as an interpretable confidence report
 
 ##
 
