@@ -1010,3 +1010,70 @@ This is helpful in demos because it confirms that the pipeline completed success
     print(f"✓ {len(anomalies_all)} anomalies detected")
     print(f"✓ 3 visualizations generated (dark theme)\n")
 ```
+## outputs
+
+![Anomaly detection timeline (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/anomaly_detection_complete%201.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This is the main evidence plot, aligned over `time_window`, with three stacked views: `packet_count` (top), `anomaly_score` (middle), and `traffic_volume` (bottom). For normal traffic, the overall “shape” of activity looks consistent over time, and there is no sustained region where the system repeatedly flags anomalies with high confidence.
+
+**How to read it:** Red anomaly points should be rare and mostly isolated. Even if a few windows get flagged, you typically won’t see long consecutive runs of high `anomaly_score`, and spikes in `packet_count` usually have a reasonable matching behavior in `traffic_volume` (not a strange mismatch). The dashed vertical line is the `train/test` split; in normal traffic the pattern after the split remains similar to the pattern before it, which suggests the model is not encountering a new abnormal regime.
+
+**Why a few anomalies can still appear:** Models like `IsolationForest` (with `contamination=0.1`) are designed to label a small fraction of points as outliers by design, so a small number of “soft anomalies” is expected even in benign data. The key is that these points are low-agreement (fewer votes) and do not form a consistent abnormal pattern.
+
+---
+
+![Feature correlation (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/feature_correlation%201.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This is a correlation matrix of selected features (e.g., `packet_count`, `traffic_volume`, `source_ip_entropy`, `unique_source_ip`, `avg_packet_size`, `anomaly_score`). It answers one question: “Which features move together, and which provide independent information?”
+
+**How to read it:** Values close to \(1\) mean two features rise and fall together, values close to \(-1\) mean they move oppositely, and values near \(0\) mean they’re mostly independent. In normal traffic, it’s common to see a reasonable positive relationship between `packet_count` and `traffic_volume`, because more packets often means more bytes.
+
+**Why it matters for your pipeline:** If `anomaly_score` strongly correlates with only one basic feature, your detector might effectively be “just a threshold” on that feature. In healthy normal results, `anomaly_score` is usually influenced by multiple signals (intensity, volume, diversity, timing), which supports your “hybrid” claim.
+
+---
+
+![Model comparison (normal)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/model_comparison%201.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This bar chart compares how many anomalies each detector flagged on the test set: `IsolationForest`, `OneClassSVM`, `KMeans`, `ExpertSystem`, and the final `Ensemble`. It reveals whether any single model is overly aggressive or overly conservative.
+
+**How to read it:** For normal traffic, you typically expect relatively low counts across all models, and the `Ensemble` (majority voting) should be at least as conservative as the noisiest individual model. If one model flags much more than others, it can indicate that model is sensitive to certain benign patterns (for example, `OneClassSVM` can be stricter depending on scaling and boundary shape).
+
+**Why the ensemble result matters:** The ensemble count being low supports the idea that “multiple independent methods agree that most windows are normal,” which is stronger than relying on a single algorithm.
+
+---
+
+### Attack / anomalous traffic outputs
+
+![Anomaly detection timeline (attack)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/anomaly_detection_complete%202.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This is the same 3-layer timeline, but now the data contains injected attack behavior. The core expectation is that anomalies are no longer rare and isolated; instead, you see clusters of flagged windows where the traffic behavior changes in a way that breaks the “normal baseline.”
+
+**How to read it:** Look for sustained regions where red points concentrate, and where `anomaly_score` forms a clear elevated band rather than occasional bumps. In attack traffic, you often see either (a) unusually high `packet_count`, (b) unusual `traffic_volume`, or (c) unusual combinations like high packets with small `avg_packet_size`, or many sources reflected by `unique_source_ip`/`source_ip_entropy` shifts.
+
+**Why this supports detection:** The timeline makes it visually obvious that the model is reacting to a pattern, not random noise. The presence of a coherent abnormal segment after (or across) the `train/test` split suggests the system can generalize beyond the training baseline.
+
+---
+
+![Feature correlation (attack)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/feature_correlation%202.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This correlation matrix reflects how relationships between features behave when attack windows exist. Attacks can change which features “move together,” because they often distort traffic structure (timing, volume, diversity) in a non-normal way.
+
+**How to read it:** Compared to the normal case, you may observe stronger or newly emerging correlations (or correlations weakening) between key indicators and `anomaly_score`. For instance, if an attack is volume-driven, `anomaly_score` may align more with `traffic_volume`; if it’s diversity-driven, it may align more with `unique_source_ip` or shifts in `source_ip_entropy`.
+
+**Why it matters for explanation:** This helps you justify that the detector is not using a single cue. Instead, it responds to the multivariate footprint of the attack, which is exactly why your pipeline builds multiple engineered features (ratios, rolling stats, change rates).
+
+---
+
+![Model comparison (attack)](https://github.com/zedparsa/Flowsense-ids/blob/main/assets/model_comparison%202.png?raw=1)  
+
+
+**What this figure shows (conceptually):** This bar chart shows how each component behaves under attack conditions. In a good attack-injected dataset, anomaly counts rise for multiple detectors, and the `Ensemble` should also rise because there is more cross-model agreement.
+
+**How to read it:** If most models detect more anomalies than in the normal scenario, that’s a strong sign the injected behavior is “structurally different.” If only one model spikes while others remain low, it suggests the attack signature aligns with one method’s sensitivity but is not broadly supported, which is useful for tuning.
+
+**Why the ensemble is the final evidence:** An ensemble increase indicates “multiple independent perspectives” (outlier-based, boundary-based, clustering distance, and rule-based reasoning) converge on the same suspicious windows. That is usually your most defensible argument in a presentation.
